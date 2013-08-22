@@ -102,7 +102,10 @@ module.exports = class Target
     #---------------------------------------------------------------------------
     initialize: () ->
         
-        document.body.appendChild(document.createElement('iframe')).src="/weinre/client/index.html"
+        iframe = document.createElement('iframe')
+        iframe.src="/weinre/client/index.html"
+        iframe.name="weinre"
+        document.body.appendChild(iframe)
         
         element = @getTargetScriptElement()
 
