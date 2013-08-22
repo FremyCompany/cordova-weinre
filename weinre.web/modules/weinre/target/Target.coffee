@@ -1,4 +1,3 @@
-
 #---------------------------------------------------------------------------------
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -102,6 +101,9 @@ module.exports = class Target
 
     #---------------------------------------------------------------------------
     initialize: () ->
+        
+        document.body.appendChild(document.createElement('iframe')).src="/weinre/client/index.html"
+        
         element = @getTargetScriptElement()
 
         @setWeinreServerURLFromScriptSrc element
