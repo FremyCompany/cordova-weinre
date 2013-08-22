@@ -1,4 +1,3 @@
-
 #---------------------------------------------------------------------------------
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -65,11 +64,27 @@ module.exports = class MessageDispatcher
         return if @_opened or @_opening
         throw new Ex(arguments, "socket has already been closed") if @_closed
         @_opening = true
-        @_socket = new WebSocketXhr(@_url, @_id)
+        @_socket = {
+	    	eventHandlers: {open:[],error;[],message:[],close:[]}
+        	addEventListener: (e,f) ->
+        		this.eventHandlers[e].push(f)
+        	send: (data) ->
+        	    (parent||frames['weinre']).postMessage(data);
+        }
         @_socket.addEventListener "open", Binding(this, "_handleOpen")
         @_socket.addEventListener "error", Binding(this, "_handleError")
         @_socket.addEventListener "message", Binding(this, "_handleMessage")
         @_socket.addEventListener "close", Binding(this, "_handleClose")
+        setTimeout(Binding(this, "_openForReal"), 500);
+        
+    #---------------------------------------------------------------------------
+    _openForReal: ->
+        return if @_opened
+        throw new Ex(arguments, "socket has already been closed") if @_closed
+        @_socket.eventHandlers['open'].forEach((f) -> f({target:@_socket))
+        @_opening = false
+        @_opened = true
+        window.onmessage = Binding(this, "_handleMessage")
 
     #---------------------------------------------------------------------------
     close: ->
