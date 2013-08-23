@@ -64,27 +64,31 @@ module.exports = class MessageDispatcher
         return if @_opened or @_opening
         throw new Ex(arguments, "socket has already been closed") if @_closed
         @_opening = true
-        @_socket = {
-	    	eventHandlers: {open:[],error;[],message:[],close:[]}
-        	addEventListener: (e,f) ->
-        		this.eventHandlers[e].push(f)
-        	send: (data) ->
-        	    (parent||frames['weinre']).postMessage(data);
-        }
+        _socket = @_socket = 
+            eventHandlers: 
+                open:[]
+                error:[]
+                message:[]
+                close:[]
+            addEventListener: (e,f) ->
+                _socket.eventHandlers[e].push(f)
+            send: (data) ->
+                (parent||frames['weinre']).onWiMessage(data)
         @_socket.addEventListener "open", Binding(this, "_handleOpen")
         @_socket.addEventListener "error", Binding(this, "_handleError")
         @_socket.addEventListener "message", Binding(this, "_handleMessage")
         @_socket.addEventListener "close", Binding(this, "_handleClose")
-        setTimeout(Binding(this, "_openForReal"), 500);
+        window.onWiMessage = Binding(this, "_handleMessage")
+        setTimeout(Binding(this, "_openForReal"), 1500)
+        
         
     #---------------------------------------------------------------------------
     _openForReal: ->
         return if @_opened
         throw new Ex(arguments, "socket has already been closed") if @_closed
-        @_socket.eventHandlers['open'].forEach((f) -> f({target:@_socket))
+        @_socket.eventHandlers['open'].forEach((f) -> f({target:@_socket}))
         @_opening = false
         @_opened = true
-        window.onmessage = Binding(this, "_handleMessage")
 
     #---------------------------------------------------------------------------
     close: ->
@@ -180,7 +184,7 @@ module.exports = class MessageDispatcher
         ]
 
         try
-            data = JSON.parse(message.data)
+            data = JSON.parse(message.data || message)
         catch e
             throw new Ex(arguments, "invalid JSON data received: #{e}: '#{message.data}'")
 
